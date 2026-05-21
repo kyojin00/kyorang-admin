@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase-browser';
+import { processReport } from './actions';
 
 interface Report {
   id: string;
@@ -64,7 +64,6 @@ export default function ReportsClient({
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [reviewNote, setReviewNote] = useState('');
   const [processing, setProcessing] = useState(false);
-  const supabase = createClient();
 
   const updateFilter = (key: 'status' | 'type', value: string) => {
     const params = new URLSearchParams();
@@ -75,21 +74,20 @@ export default function ReportsClient({
     });
   };
 
-  async function handleProcess(reportId: string, newStatus: 'resolved' | 'rejected') {
+  async function handleProcess(
+    reportId: string,
+    newStatus: 'resolved' | 'rejected',
+  ) {
     setProcessing(true);
     try {
-      const { error: updateError } = await supabase
-        .from('kyorangtalk_reports')
-        .update({
-          status: newStatus,
-          reviewed_at: new Date().toISOString(),
-          review_note: reviewNote.trim() || null,
-        })
-        .eq('id', reportId);
+      const result = await processReport({
+        reportId,
+        newStatus,
+        reviewNote,
+      });
 
-      if (updateError) {
-        alert('처리 실패: ' + updateError.message);
-        setProcessing(false);
+      if (!result.success) {
+        alert('처리 실패: ' + result.error);
         return;
       }
 

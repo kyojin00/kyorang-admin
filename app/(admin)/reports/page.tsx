@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server';
+import { createAdminClient } from '@/lib/supabase-admin';
 import ReportsClient from './ReportsClient';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,8 @@ export default async function ReportsPage({
 }: {
   searchParams: { status?: string; type?: string };
 }) {
-  const supabase = createClient();
+  // ⭐ service role 사용 — RLS 우회해서 모든 신고 데이터 조회
+  const supabase = createAdminClient();
   const status = searchParams.status || 'pending';
   const type = searchParams.type || 'all';
 
