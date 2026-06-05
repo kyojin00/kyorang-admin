@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server';
+import { createMoodClient } from '@/lib/supabase-mood-server';
 import ConfirmButton from './confirm-button';
 import { deleteReply, banUser, unbanUser } from './actions';
 
@@ -18,9 +18,9 @@ type ReportedReply = {
 export const dynamic = 'force-dynamic';
 
 export default async function MoodReportsPage() {
-  // ⭐ 쿠키 기반 세션 클라이언트 사용 — RPC 의 is_admin() 가 auth.uid() 로 인가하기 때문.
-  // service_role 로 호출하면 auth.uid() 가 null 이라 admin 체크가 통과되지 않는다.
-  const supabase = createClient();
+  // ⭐ 무드 프로젝트 전용 클라이언트.
+  // is_admin() 가 무드 프로젝트의 auth.uid() 로 인가하므로 무드 세션 쿠키가 필수.
+  const supabase = createMoodClient();
 
   const { data, error } = await supabase.rpc('admin_list_reported_replies', {
     p_limit: 100,

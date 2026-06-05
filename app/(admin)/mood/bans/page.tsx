@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server';
+import { createMoodClient } from '@/lib/supabase-mood-server';
 import ConfirmButton from '../reports/confirm-button';
 import { unbanUser } from '../reports/actions';
 
@@ -13,8 +13,7 @@ type BannedUser = {
 export const dynamic = 'force-dynamic';
 
 export default async function MoodBansPage() {
-  // 쿠키 세션 클라이언트 — is_admin() 인가용 auth.uid() 가 필요.
-  const supabase = createClient();
+  const supabase = createMoodClient();
 
   const { data, error } = await supabase.rpc('admin_list_bans', {
     p_limit: 200,
