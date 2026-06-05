@@ -81,14 +81,16 @@ function LoginForm() {
             <label className="block text-xs font-bold text-white/70 mb-2">
               이메일
             </label>
-            <input
-              type="email"
+              <input
+              type="text"
+              inputMode="email"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               autoFocus
               className="w-full px-4 py-3 bg-bg border border-border rounded-lg text-sm focus:outline-none focus:border-primary"
-              placeholder="admin@example.com"
+              placeholder="아이디"
             />
           </div>
 
