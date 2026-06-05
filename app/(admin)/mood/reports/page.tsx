@@ -1,121 +1,131 @@
-import { createClient } from '@/lib/supabase/server'
-import { deleteReply, banUser, unbanUser } from './actions'
-import ConfirmButton from './confirm-button'
+import { createClient } from '@/lib/supabase-server';
+import ConfirmButton from './confirm-button';
+import { deleteReply, banUser, unbanUser } from './actions';
 
-// admin_list_reported_replies 의 반환 행 타입
 type ReportedReply = {
-  reply_id: string
-  sender_id: string
-  sender_email: string | null
-  requester_id: string
-  content: string
-  template_id: string
-  reply_created: string
-  report_count: number
-  last_reported: string
-  is_banned: boolean
-}
+  reply_id: string;
+  sender_id: string;
+  sender_email: string | null;
+  requester_id: string;
+  content: string;
+  template_id: string;
+  reply_created: string;
+  report_count: number;
+  last_reported: string;
+  is_banned: boolean;
+};
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
-export default async function ReportedRepliesPage() {
-  const supabase = await createClient()
+export default async function MoodReportsPage() {
+  // ⭐ 쿠키 기반 세션 클라이언트 사용 — RPC 의 is_admin() 가 auth.uid() 로 인가하기 때문.
+  // service_role 로 호출하면 auth.uid() 가 null 이라 admin 체크가 통과되지 않는다.
+  const supabase = createClient();
+
   const { data, error } = await supabase.rpc('admin_list_reported_replies', {
     p_limit: 100,
-  })
+  });
 
-  if (error) {
-    return (
-      <div className="p-6 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold mb-2">신고된 위로</h1>
-        <div className="mt-6 p-4 rounded-lg bg-red-50 text-red-700 text-sm">
-          불러오기 실패: {error.message}
-        </div>
-      </div>
-    )
-  }
-
-  const rows = (data ?? []) as ReportedReply[]
+  const rows = (data ?? []) as ReportedReply[];
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-end justify-between mb-2">
-        <h1 className="text-2xl font-bold">신고된 위로</h1>
+    <div>
+      <header className="mb-6 flex items-end justify-between">
+        <div>
+          <h1 className="text-2xl font-black mb-1">무드 · 신고된 위로</h1>
+          <p className="text-sm text-white/50">
+            익명 위로 풀에서 신고된 위로 목록 · 서로 다른 신고자 3건 이상 누적 시 자동 차단
+          </p>
+        </div>
         <a
           href="/mood/bans"
-          className="text-sm text-gray-500 hover:text-gray-800 underline underline-offset-2"
+          className="text-sm text-white/50 hover:text-white underline underline-offset-2"
         >
-          차단 유저 목록 →
+          차단 유저 →
         </a>
-      </div>
-      <p className="text-sm text-gray-500 mb-6">
-        서로 다른 신고자 누적 3건 이상이면 자동 차단됩니다. 부당 차단은 차단 해제로 풀어주세요.
-        위로 삭제는 영구적이며 동반 신고도 함께 제거됩니다.
-      </p>
+      </header>
 
-      {rows.length === 0 ? (
-        <div className="rounded-lg border border-dashed py-16 text-center text-gray-400">
-          신고된 위로가 없습니다.
+      {error && (
+        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">
+          불러오기 실패: {error.message}
+        </div>
+      )}
+
+      {!error && rows.length === 0 ? (
+        <div className="bg-bgCard border border-border rounded-2xl py-16 text-center text-white/40 text-sm">
+          신고된 위로가 없어요
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600">
+        <div className="bg-bgCard border border-border rounded-2xl overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-bg/50 text-xs text-white/50 uppercase tracking-wider">
               <tr>
-                <th className="px-3 py-2 text-left font-medium">발신자</th>
-                <th className="px-3 py-2 text-left font-medium">위로 내용</th>
-                <th className="px-3 py-2 text-center font-medium">신고수</th>
-                <th className="px-3 py-2 text-left font-medium">마지막 신고</th>
-                <th className="px-3 py-2 text-center font-medium">상태</th>
-                <th className="px-3 py-2 text-right font-medium">작업</th>
+                <th className="px-4 py-3 text-left">발신자</th>
+                <th className="px-4 py-3 text-left">위로 내용</th>
+                <th className="px-4 py-3 text-center">신고수</th>
+                <th className="px-4 py-3 text-left">마지막 신고</th>
+                <th className="px-4 py-3 text-center">상태</th>
+                <th className="px-4 py-3 text-right">작업</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody>
               {rows.map((r) => (
-                <tr key={r.reply_id} className="hover:bg-gray-50 align-top">
-                  <td className="px-3 py-3">
-                    <div className="font-medium text-gray-900 break-all">
-                      {r.sender_email ?? '(이메일 없음)'}
+                <tr
+                  key={r.reply_id}
+                  className="border-t border-border hover:bg-white/5 align-top"
+                >
+                  <td className="px-4 py-3">
+                    <div className="text-sm font-semibold break-all">
+                      {r.sender_email || (
+                        <span className="text-white/30">—</span>
+                      )}
                     </div>
-                    <div className="text-xs text-gray-400 font-mono mt-0.5">
+                    <div className="text-xs text-white/30 font-mono mt-0.5">
                       {r.sender_id.slice(0, 8)}…
                     </div>
                   </td>
-                  <td className="px-3 py-3 max-w-md">
-                    <div className="whitespace-pre-wrap break-words text-gray-800">
+                  <td className="px-4 py-3 max-w-md">
+                    <div className="text-sm whitespace-pre-wrap break-words">
                       {r.content}
                     </div>
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-white/30 mt-1">
                       템플릿: {r.template_id}
                     </div>
                   </td>
-                  <td className="px-3 py-3 text-center">
-                    <span className="inline-block min-w-[28px] px-2 py-1 rounded bg-red-100 text-red-700 font-bold">
+                  <td className="px-4 py-3 text-center">
+                    <span className="inline-block min-w-[28px] px-2 py-1 rounded bg-red-500/20 text-red-400 text-xs font-bold">
                       {r.report_count}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-gray-600 whitespace-nowrap">
-                    {new Date(r.last_reported).toLocaleString('ko-KR')}
+                  <td className="px-4 py-3 text-xs text-white/50 whitespace-nowrap">
+                    {new Date(r.last_reported).toLocaleString('ko-KR', {
+                      year: '2-digit',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </td>
-                  <td className="px-3 py-3 text-center">
+                  <td className="px-4 py-3 text-center">
                     {r.is_banned ? (
-                      <span className="inline-block px-2 py-0.5 rounded text-xs bg-gray-800 text-white">
+                      <span className="inline-block px-2 py-0.5 rounded text-xs font-bold bg-gray-500/20 text-gray-400">
                         차단됨
                       </span>
                     ) : (
-                      <span className="inline-block px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">
+                      <span className="inline-block px-2 py-0.5 rounded text-xs font-bold bg-green-500/20 text-green-400">
                         활성
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-4 py-3">
                     <div className="flex gap-2 justify-end flex-wrap">
                       <ConfirmButton
                         action={deleteReply.bind(null, r.reply_id)}
-                        confirmMessage={`이 위로를 삭제할까요?\n\n"${r.content.slice(0, 60)}${
-                          r.content.length > 60 ? '…' : ''
-                        }"`}
-                        className="px-3 py-1 text-xs font-medium bg-red-600 text-white rounded hover:bg-red-700"
+                        confirmMessage={`이 위로를 삭제할까요?\n\n"${r.content.slice(
+                          0,
+                          60,
+                        )}${r.content.length > 60 ? '…' : ''}"`}
+                        className="px-3 py-1 text-xs font-bold bg-red-500 hover:bg-red-600 text-white rounded"
                       >
                         위로 삭제
                       </ConfirmButton>
@@ -123,7 +133,7 @@ export default async function ReportedRepliesPage() {
                         <ConfirmButton
                           action={unbanUser.bind(null, r.sender_id, false)}
                           confirmMessage={`이 사용자의 차단을 풀까요?\n${r.sender_email ?? ''}\n\n(누적 신고 기록은 유지됩니다)`}
-                          className="px-3 py-1 text-xs font-medium bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                          className="px-3 py-1 text-xs font-bold bg-bg border border-border hover:bg-white/5 text-white rounded"
                         >
                           차단 해제
                         </ConfirmButton>
@@ -132,10 +142,10 @@ export default async function ReportedRepliesPage() {
                           action={banUser.bind(
                             null,
                             r.sender_id,
-                            'admin 수동 차단'
+                            'admin 수동 차단',
                           )}
                           confirmMessage={`이 사용자를 발송 차단할까요?\n${r.sender_email ?? ''}`}
-                          className="px-3 py-1 text-xs font-medium bg-gray-800 text-white rounded hover:bg-gray-900"
+                          className="px-3 py-1 text-xs font-bold bg-bg border border-border hover:bg-white/5 text-white rounded"
                         >
                           수동 차단
                         </ConfirmButton>
@@ -148,6 +158,10 @@ export default async function ReportedRepliesPage() {
           </table>
         </div>
       )}
+
+      <p className="mt-4 text-xs text-white/40">
+        ⚠️ 위로 삭제는 영구적이며 동반 신고 기록도 cascade 로 함께 정리됩니다
+      </p>
     </div>
-  )
+  );
 }
