@@ -12,6 +12,7 @@ const talkMenus = [
 
 const moodMenus = [
   { href: '/mood/reports', label: '신고된 위로', icon: '🚩' },
+  { href: '/mood/queue', label: '검토 큐', icon: '🔍' },
   { href: '/mood/bans', label: '차단 유저', icon: '🚫' },
 ];
 
