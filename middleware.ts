@@ -11,7 +11,8 @@ export async function middleware(request: NextRequest) {
     return handleMoodSection(request);
   }
 
-  // 그 외 모든 경로는 톡 프로젝트 세션으로 인가 (기존 로직)
+  // 그 외 모든 경로 (/login, /reports, /users, /stats, /village/*)는
+  // 교랑톡 프로젝트 세션으로 인가
   return handleTalkSection(request);
 }
 
@@ -49,19 +50,21 @@ async function handleTalkSection(request: NextRequest) {
     },
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
   const isLoginPage = path.startsWith('/login');
 
   if (!user && !isLoginPage) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
-  if (user && !isAdmin(user.id) && !isLoginPage) {
+  if (user && !isAdmin(user.email) && !isLoginPage) {
     return NextResponse.redirect(
       new URL('/login?error=not_admin', request.url),
     );
   }
-  if (user && isAdmin(user.id) && isLoginPage) {
+  if (user && isAdmin(user.email) && isLoginPage) {
     return NextResponse.redirect(new URL('/reports', request.url));
   }
 
@@ -102,19 +105,21 @@ async function handleMoodSection(request: NextRequest) {
     },
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
   const isLoginPage = path.startsWith('/mood-login');
 
   if (!user && !isLoginPage) {
     return NextResponse.redirect(new URL('/mood-login', request.url));
   }
-  if (user && !isMoodAdmin(user.id) && !isLoginPage) {
+  if (user && !isMoodAdmin(user.email) && !isLoginPage) {
     return NextResponse.redirect(
       new URL('/mood-login?error=not_admin', request.url),
     );
   }
-  if (user && isMoodAdmin(user.id) && isLoginPage) {
+  if (user && isMoodAdmin(user.email) && isLoginPage) {
     return NextResponse.redirect(new URL('/mood/reports', request.url));
   }
 
