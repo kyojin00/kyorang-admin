@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server';
+﻿import { createClient } from '@/lib/supabase-server';
 import { createVillageAdminClient } from '@/lib/supabase-village-server';
 import { isAdmin } from '@/lib/admin';
 import { redirect } from 'next/navigation';
@@ -40,7 +40,6 @@ export default async function VillageReportsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  // 1. 교랑톡 어드민 인증 체크
   const supabase = await createClient();
   const {
     data: { user },
@@ -48,7 +47,6 @@ export default async function VillageReportsPage({
   if (!user) redirect('/login');
   if (!isAdmin(user.email)) redirect('/login?error=not_admin');
 
-  // 2. 신고 목록 조회
   const params = await searchParams;
   const status = params.status ?? 'pending';
 
@@ -78,7 +76,6 @@ export default async function VillageReportsPage({
     }),
   );
 
-  // 카운트
   const { count: pendingCount } = await admin
     .from('reports')
     .select('*', { count: 'exact', head: true })
@@ -92,10 +89,6 @@ export default async function VillageReportsPage({
     />
   );
 }
-
-// ===========================================================
-// 헬퍼 (서버 사이드)
-// ===========================================================
 
 async function loadProfileNickname(userId: string): Promise<string | null> {
   const admin = createVillageAdminClient();
@@ -137,8 +130,7 @@ async function loadTarget(
         .select('content, author_id, profiles!posts_author_id_fkey(nickname, is_banned)')
         .eq('id', id)
         .maybeSingle();
-      // @ts-expect-error - profiles 조인 타입
-      const profile = data?.profiles ?? null;
+      const profile = (data as { profiles?: { nickname?: string; is_banned?: boolean } } | null)?.profiles ?? null;
       return {
         type,
         id,
@@ -155,8 +147,7 @@ async function loadTarget(
         .select('content, author_id, profiles(nickname, is_banned)')
         .eq('id', id)
         .maybeSingle();
-      // @ts-expect-error - profiles 조인 타입
-      const profile = data?.profiles ?? null;
+      const profile = (data as { profiles?: { nickname?: string; is_banned?: boolean } } | null)?.profiles ?? null;
       return {
         type,
         id,
@@ -174,8 +165,7 @@ async function loadTarget(
         .eq('id', id)
         .maybeSingle();
       if (vm.data) {
-        // @ts-expect-error
-        const profile = vm.data.profiles ?? null;
+        const profile = (vm.data as { profiles?: { nickname?: string; is_banned?: boolean } }).profiles ?? null;
         return {
           type,
           id,
@@ -192,8 +182,7 @@ async function loadTarget(
         .eq('id', id)
         .maybeSingle();
       if (dm.data) {
-        // @ts-expect-error
-        const profile = dm.data.profiles ?? null;
+        const profile = (dm.data as { profiles?: { nickname?: string; is_banned?: boolean } }).profiles ?? null;
         return {
           type,
           id,
