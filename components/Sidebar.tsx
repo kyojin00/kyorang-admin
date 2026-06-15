@@ -20,6 +20,7 @@ const moodMenus = [
 
 const villageMenus = [
   { href: '/village/reports', label: '신고 관리', icon: '🚨' },
+  { href: '/village/users', label: '정지 사용자', icon: '🚫' },
 ];
 
 export default function Sidebar() {

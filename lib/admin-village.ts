@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase-server';
 import { createVillageAdminClient } from '@/lib/supabase-village-server';
 import { isAdmin } from '@/lib/admin';
@@ -43,6 +44,7 @@ export async function dismissReport(reportId: string, note?: string) {
     .eq('id', reportId);
 
   if (error) throw new Error(error.message);
+  revalidatePath('/village/reports');
   return { ok: true };
 }
 
@@ -84,6 +86,7 @@ export async function deleteReportTarget(
     })
     .eq('id', reportId);
 
+  revalidatePath('/village/reports');
   return { ok: true };
 }
 
@@ -120,6 +123,8 @@ export async function banUserFromReport(
     })
     .eq('id', reportId);
 
+  revalidatePath('/village/users');
+  revalidatePath('/village/reports');
   return { ok: true, user_id: userId };
 }
 
@@ -138,6 +143,9 @@ export async function unbanUser(userId: string) {
     .eq('id', userId);
 
   if (error) throw new Error(error.message);
+
+  revalidatePath('/village/users');
+  revalidatePath('/village/reports');
   return { ok: true };
 }
 
