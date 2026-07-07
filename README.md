@@ -25,10 +25,10 @@ notepad .env.local
 ```
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://taohtzdmqsvhbxfqfvmq.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...  # ⚠️ 절대 외부 노출 금지
-NEXT_PUBLIC_ADMIN_USER_IDS=4e4161a5-dea4-4953-a4f6-a5424fd524b0
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # ⚠️ 절대 외부 노출 금지
+NEXT_PUBLIC_ADMIN_USER_IDS=your-admin-user-uuid
 ```
 
 ### Supabase 키 가져오기
@@ -119,6 +119,7 @@ kyorang-admin/
 - `lib/supabase-admin.ts` 는 서버 컴포넌트 / API 라우트에서만 사용
 - `.env.local` 은 `.gitignore` 에 포함됨 (커밋 X)
 - 본인의 anon key 도 가급적 비공개 저장소에 두기
+- README 등 공개 문서에 실제 프로젝트 URL, 관리자 UUID 를 적지 말 것
 
 ## 트러블슈팅
 
@@ -143,10 +144,10 @@ ON kyorangtalk_reports
 FOR UPDATE
 TO authenticated
 USING (
-  auth.uid() = '4e4161a5-dea4-4953-a4f6-a5424fd524b0'::uuid
+  auth.uid() = 'your-admin-user-uuid'::uuid
 )
 WITH CHECK (
-  auth.uid() = '4e4161a5-dea4-4953-a4f6-a5424fd524b0'::uuid
+  auth.uid() = 'your-admin-user-uuid'::uuid
 );
 ```
 
@@ -154,8 +155,8 @@ WITH CHECK (
 ```sql
 USING (
   auth.uid() = ANY(ARRAY[
-    '4e4161a5-dea4-4953-a4f6-a5424fd524b0',
-    'other-admin-uuid'
+    'admin-uuid-1',
+    'admin-uuid-2'
   ]::uuid[])
 )
 ```
